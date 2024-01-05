@@ -1,89 +1,65 @@
 import { View, Text, ScrollView } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ArrowRightIcon } from "react-native-heroicons/solid";
 import RestaurantCard from "./RestaurantCard";
-import img1 from "../assets/deliver-2.jpeg";
-import img2 from "../assets/deliver-3.jpeg";
-import img3 from "../assets/deliver-4.jpeg";
-import img4 from "../assets/deliver-5.png";
-import img5 from "../assets/deliver-6.jpeg";
+import sanityClient from "../sanity";
 
 const FeaturedBox = ({ title, description, id }) => {
+  const [restaurants, setRestaurants] = useState([]);
+
+  useEffect(() => {
+    sanityClient
+      .fetch(
+        `*[_type == 'featured' && _id == $id] {
+          ...,
+          restaurants[]->{
+            ...,
+            dishes[]->,
+            type-> {
+              name
+            }
+          }
+      }[0]`,
+        { id }
+      )
+      .then((data) => {
+        setRestaurants(data?.restaurants);
+      })
+      .catch(console.error);
+  }, [id]);
+
   return (
     <View className="py-3">
       <View className="flex-row items-center justify-between">
-        <Text className="font-bold text-lg">{title}</Text>
+        <Text className="text-lg font-bold">{title}</Text>
         <ArrowRightIcon size={20} color="black" />
       </View>
 
       <Text className="text-sm text-gray-500">{description}</Text>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{}}
-      >
-        <RestaurantCard
-          id="1"
-          imgUrl={img1}
-          title="Restaurant 1"
-          rating="4.5"
-          genre="Chinese"
-          address="123 Main St"
-          short_description="This is a short description"
-          dishes="Dish 1, Dish 2, Dish 3"
-          long="123"
-          lat="123"
-        />
-        <RestaurantCard
-          id="1"
-          imgUrl={img1}
-          title="Restaurant 1"
-          rating="4.5"
-          genre="Chinese"
-          address="123 Main St"
-          short_description="This is a short description"
-          dishes="Dish 1, Dish 2, Dish 3"
-          long="123"
-          lat="123"
-        />
-        <RestaurantCard
-          id="1"
-          imgUrl={img1}
-          title="Restaurant 1"
-          rating="4.5"
-          genre="Chinese"
-          address="123 Main St"
-          short_description="This is a short description"
-          dishes="Dish 1, Dish 2, Dish 3"
-          long="123"
-          lat="123"
-        />
-        <RestaurantCard
-          id="1"
-          imgUrl={img1}
-          title="Restaurant 1"
-          rating="4.5"
-          genre="Chinese"
-          address="123 Main St"
-          short_description="This is a short description"
-          dishes="Dish 1, Dish 2, Dish 3"
-          long="123"
-          lat="123"
-        />
-        <RestaurantCard
-          id="1"
-          imgUrl={img1}
-          title="Restaurant 1"
-          rating="4.5"
-          genre="Chinese"
-          address="123 Main St"
-          short_description="This is a short description"
-          dishes="Dish 1, Dish 2, Dish 3"
-          long="123"
-          lat="123"
-        />
-      </ScrollView>
+      {restaurants && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{}}
+        >
+          {restaurants?.map((restaurant) => (
+            <RestaurantCard
+              key={restaurant._id}
+              id={restaurant._id}
+              imgUrl={restaurant?.image}
+              title={restaurant?.name}
+              rating={restaurant?.rating}
+              genre={restaurant?.type?.name}
+              address={restaurant?.address}
+              short_description={restaurant?.short_description}
+              dishes={restaurant?.dishes}
+              long={restaurant?.long}
+              lat={restaurant?.lat}
+            />
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 };

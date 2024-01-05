@@ -6,7 +6,7 @@ import {
   TextInput,
   ScrollView,
 } from "react-native";
-import React, { useLayoutEffect } from "react";
+import React, { useLayoutEffect, useState, useEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
 import {
   AdjustmentsVerticalIcon,
@@ -16,9 +16,11 @@ import {
 } from "react-native-heroicons/solid";
 import Categories from "../components/Categories";
 import FeaturedBox from "../components/FeaturedBox";
+import sanityClient from "../sanity";
 
 const Home = () => {
   const navigation = useNavigation();
+  const [featuredCategories, setFeaturedCategories] = useState([]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -27,11 +29,31 @@ const Home = () => {
     });
   }, []);
 
+  useEffect(() => {
+    sanityClient
+      .fetch(
+        `*[_type == 'featured'] {
+          ...,
+          restaurants[]->{
+            ...,
+            dishes[]->,
+            type-> {
+              name
+            }
+          }
+      }`
+      )
+      .then((data) => {
+        setFeaturedCategories(data);
+      })
+      .catch(console.error);
+  }, []);
+
   return (
     <SafeAreaView>
       <View className="container px-4">
         {/* header */}
-        <View className="flex flex-row space-x-2 items-center">
+        <View className="flex flex-row items-center space-x-2">
           <Image
             source={{
               uri: "https://avatars.githubusercontent.com/u/60999976?v=4",
@@ -40,10 +62,10 @@ const Home = () => {
           />
 
           <View className="flex-1">
-            <Text className="font-bold text-gray-900 text-xs">
+            <Text className="text-xs font-bold text-gray-900">
               Deliver Now!
             </Text>
-            <Text className="font-bold text-xl flex flex-row items-center">
+            <Text className="flex flex-row items-center text-xl font-bold">
               Current Location
               <ChevronDownIcon size={20} color="#000" />
             </Text>
@@ -53,8 +75,8 @@ const Home = () => {
         </View>
 
         {/* search bar */}
-        <View className="flex-row items-center space-x-2 py-2">
-          <View className="flex-row flex-1 space-x-2 bg-gray-200 p-3">
+        <View className="flex-row items-center py-2 space-x-2">
+          <View className="flex-row flex-1 p-3 space-x-2 bg-gray-200">
             <MagnifyingGlassIcon color="gray" size={20} />
             <TextInput
               placeholder="Restaurants and cuisines"
@@ -69,7 +91,7 @@ const Home = () => {
         <ScrollView
           className="bg-gray-100"
           contentContainerStyle={{
-            paddingBottom: 100,
+            marginBottom: 100,
             paddingTop: 10,
           }}
         >
@@ -77,21 +99,14 @@ const Home = () => {
           <Categories />
           {/* featured Box */}
           <>
-            <FeaturedBox
-              id="1"
-              title="Featured"
-              description="Paid Placements from our partners"
-            />
-            <FeaturedBox
-              id="1"
-              title="Tasty Discounts"
-              description="Paid Placements from our partners"
-            />
-            <FeaturedBox
-              id="1"
-              title="Offers near you!"
-              description="Paid Placements from our partners"
-            />
+            {featuredCategories?.map((item) => (
+              <FeaturedBox
+                key={item?._id}
+                id={item?._id}
+                title={item?.name}
+                description={item?.short_description}
+              />
+            ))}
           </>
         </ScrollView>
       </View>
