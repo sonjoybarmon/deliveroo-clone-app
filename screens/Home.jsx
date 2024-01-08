@@ -51,7 +51,7 @@ const Home = () => {
 
   return (
     <SafeAreaView>
-      <View className="container px-4">
+      <View className="container px-4 pb-[220px]">
         {/* header */}
         <View className="flex flex-row items-center space-x-2">
           <Image
@@ -91,7 +91,6 @@ const Home = () => {
         <ScrollView
           className="bg-gray-100"
           contentContainerStyle={{
-            marginBottom: 100,
             paddingTop: 10,
           }}
         >
